@@ -149,50 +149,50 @@ function Tables() {
     }
   };
   
-  // const updateBook = async () => {
-  //   // if (!validateForm()) return;
-  //   try {
-  //     const formData = new FormData();
-  //     formData.append("book_title", bookDetails.book_title || "");
-  //     formData.append("book_description", bookDetails.book_description || "");
-  //     formData.append("book_page[0][page_no]", bookDetails.book_page);
-  //     formData.append("book_page[0][content]", "Updated content");
-  //     formData.append("category_name", "YourCategoryNameHere");
-  //     formData.append("name", localStorage.getItem("name"));
-  //     if (bookDetails.book_cover_photo) {
-  //       formData.append("file", bookDetails.book_cover_photo);
-  //     }
+  const updateBook = async () => {
+    // if (!validateForm()) return;
+    try {
+      const formData = new FormData();
+      formData.append("book_title", bookDetails.book_title || "");
+      formData.append("book_description", bookDetails.book_description || "");
+      formData.append("book_page[0][page_no]", bookDetails.book_page);
+      formData.append("book_page[0][content]", "Updated content");
+      formData.append("category_name", "YourCategoryNameHere");
+      formData.append("name", localStorage.getItem("name"));
+      if (bookDetails.book_cover_photo) {
+        formData.append("file", bookDetails.book_cover_photo);
+      }
   
-  //     const response = await fetch(
-  //       `https://bookingreadingapp.onrender.com/api/book/editBook/${bookId}`, // Use bookId here instead of id
-  //       {
-  //         method: "PATCH",
-  //         headers: {
-  //           Authorization: localStorage.getItem("token"),
-  //         },
-  //         body: formData,
-  //       }
-  //     );
+      const response = await fetch(
+        `https://bookingreadingapp.onrender.com/api/book/editBook/${bookId}`, // Use bookId here instead of id
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: localStorage.getItem("token"),
+          },
+          body: formData,
+        }
+      );
   
-  //     if (response.ok) {
-  //       const jsonData = await response.json();
-  //       console.log(jsonData);
-  //       setOpenEditForm(false);
-  //       setBookDetails({
-  //         book_title: "",
-  //         book_description: "",
-  //         book_cover_photo: null,
-  //         book_page: "",
-  //         status: "",
-  //       });
-  //       getBooks();
-  //     } else {
-  //       throw new Error("Failed to update book");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error updating book:", error);
-  //   }
-  // };
+      if (response.ok) {
+        const jsonData = await response.json();
+        console.log(jsonData);
+        setOpenEditForm(false);
+        setBookDetails({
+          book_title: "",
+          book_description: "",
+          book_cover_photo: null,
+          book_page: "",
+          status: "",
+        });
+        getBooks();
+      } else {
+        throw new Error("Failed to update book");
+      }
+    } catch (error) {
+      console.error("Error updating book:", error);
+    }
+  };
 
   // const updateBook = async () => {
   //   try {
@@ -243,58 +243,59 @@ function Tables() {
   //   }
   // };
   
-  const updateBook = async () => {
-    try {
-      console.log("Updating book with ID:", bookId);
-      console.log("Updated book details:", bookDetails);
+
+  // const updateBook = async () => {
+  //   try {
+  //     console.log("Updating book with ID:", bookId);
+  //     console.log("Updated book details:", bookDetails);
   
-      const formData = new FormData();
-      formData.append("book_title", bookDetails.book_title || "");
-      formData.append("book_description", bookDetails.book_description || "");
-      formData.append("book_page[0][page_no]", bookDetails.book_page);
-      formData.append("book_page[0][content]", "Updated content");
-      formData.append("category_name", "YourCategoryNameHere");
-      formData.append("name", localStorage.getItem("name"));
-      if (bookDetails.book_cover_photo) {
-        formData.append("file", bookDetails.book_cover_photo);
-      }
+  //     const formData = new FormData();
+  //     formData.append("book_title", bookDetails.book_title || "");
+  //     formData.append("book_description", bookDetails.book_description || "");
+  //     formData.append("book_page[0][page_no]", bookDetails.book_page);
+  //     formData.append("book_page[0][content]", "Updated content");
+  //     formData.append("category_name", "YourCategoryNameHere");
+  //     formData.append("name", localStorage.getItem("name"));
+  //     if (bookDetails.book_cover_photo) {
+  //       formData.append("file", bookDetails.book_cover_photo);
+  //     }
   
-      const response = await fetch(
-        `https://bookingreadingapp.onrender.com/api/book/editBook/${bookId}`,
-        {
-          method: "PATCH",
-          headers: {
-            Authorization: localStorage.getItem("token"),
-          },
-          body: formData,
-        }
-      );
+  //     const response = await fetch(
+  //       `https://bookingreadingapp.onrender.com/api/book/editBook/${bookId}`,
+  //       {
+  //         method: "PATCH",
+  //         headers: {
+  //           Authorization: localStorage.getItem("token"),
+  //         },
+  //         body: formData,
+  //       }
+  //     );
   
-      if (response.ok) {
-        const jsonData = await response.json();
-        console.log("Successfully updated book:", jsonData);
+  //     if (response.ok) {
+  //       const jsonData = await response.json();
+  //       console.log("Successfully updated book:", jsonData);
   
-        // Update local state with the updated book data
-        const updatedBooks = books.map((book) =>
-          book._id === bookId ? jsonData.updatedBook : book
-        );
-        setBooks(updatedBooks);
+  //       // Update local state with the updated book data
+  //       const updatedBooks = books.map((book) =>
+  //         book._id === bookId ? jsonData.updatedBook : book
+  //       );
+  //       setBooks(updatedBooks);
   
-        setOpenEditForm(false);
-        setBookDetails({
-          book_title: "",
-          book_description: "",
-          book_cover_photo: null,
-          book_page: "",
-          status: "",
-        });
-      } else {
-        throw new Error("Failed to update book");
-      }
-    } catch (error) {
-      console.error("Error updating book:", error);
-    }
-  };
+  //       setOpenEditForm(false);
+  //       setBookDetails({
+  //         book_title: "",
+  //         book_description: "",
+  //         book_cover_photo: null,
+  //         book_page: "",
+  //         status: "",
+  //       });
+  //     } else {
+  //       throw new Error("Failed to update book");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error updating book:", error);
+  //   }
+  // };
   
 
 
@@ -352,18 +353,18 @@ function Tables() {
     return valid;
   };
   
-  // const handleEditForm = (bookId) => {
-  //   const bookToEdit = books.find((book) => book._id === bookId);
-  //   setBookId(bookId);
-  //   setBookDetails({
-  //     book_title: bookToEdit.book_title,
-  //     book_description: bookToEdit.book_description,
-  //     book_cover_photo: null,
-  //     book_page: bookToEdit.book_page,
-  //     status: bookToEdit.status,
-  //   });
-  //   setOpenEditForm(true);
-  // };
+  const handleEditForm = (bookId) => {
+    const bookToEdit = books.find((book) => book._id === bookId);
+    setBookId(bookId);
+    setBookDetails({
+      book_title: bookToEdit.book_title,
+      book_description: bookToEdit.book_description,
+      book_cover_photo: null,
+      book_page: bookToEdit.book_page,
+      status: bookToEdit.status,
+    });
+    setOpenEditForm(true);
+  };
 
   // const handleEditForm = (bookId) => {
   //   const bookToEdit = books.find((book) => book._id === bookId);
@@ -380,24 +381,7 @@ function Tables() {
   //   });
   //   setOpenEditForm(true);
   // };
-  
-  const handleEditForm = (bookId) => {
-    const bookToEdit = books.find((book) => book._id === bookId);
-    console.log("Editing book with ID:", bookId);
-    console.log("Book details to edit:", bookToEdit);
-  
-    setBookId(bookId);
-    // setBookDetails({
-    //   book_title: bookToEdit.book_title,
-    //   book_description: bookToEdit.book_description,
-    //   book_cover_photo: bookToEdit.book_cover_photo, // Retain existing cover photo
-    //   book_page: bookToEdit.book_page, // Retain existing page count
-    //   status: bookToEdit.status,
-    // });
-    setOpenEditForm(true);
-  
-  };
-  
+
 
   const handleAddPageForm = (bookId) => {
     console.log("Add Book Page for book with ID:", bookId);
