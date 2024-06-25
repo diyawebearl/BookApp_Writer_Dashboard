@@ -16,6 +16,9 @@ import EditIcon from "@mui/icons-material/Edit";
 
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
+import Snackbar from "@mui/material/Snackbar";
+import MuiAlert from "@mui/material/Alert";
+
 
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
@@ -33,13 +36,13 @@ const Author = ({ name }) => (
 function Tables() {
   const columns = [
     { Header: "Book ID", accessor: "book_id", width: "10%" },
-    { Header: "Category ID", accessor: "category_id", width: "10%" },
-    { Header: "Author ID", accessor: "author_id", width: "10%" },
+    // { Header: "Category ID", accessor: "category_id", width: "10%" },
+    // { Header: "Author ID", accessor: "author_id", width: "10%" },
     { Header: "Title", accessor: "book_title", width: "15%" },
     { Header: "Description", accessor: "book_description", width: "25%" },
     { Header: "Cover Photo", accessor: "book_cover_photo", width: "10%" },
     { Header: "Page Count", accessor: "book_page", width: "10%" },
-    { Header: "Status", accessor: "status", width: "10%" },
+    // { Header: "Status", accessor: "status", width: "10%" },
     {
       Header: "Actions",
       accessor: "_id",
@@ -65,7 +68,8 @@ function Tables() {
       ),
     },
   ];
-
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");  
   const [openInsertForm, setOpenInsertForm] = useState(false);
   const [openEditForm, setOpenEditForm] = useState(false);
   const [bookDetails, setBookDetails] = useState({
@@ -80,34 +84,8 @@ function Tables() {
   const [bookId, setBookId] = useState("");
 
   const id = localStorage.getItem("id");
-
-  // const getBooks = async () => {
-  //   try {
-  //     const response = await fetch(
-  //       `https://bookingreadingapp.onrender.com/api/book/getBooksByAuthor/${id}`,
-  //       {
-  //         method: "GET",
-  //         headers: {
-  //           Authorization: localStorage.getItem("token"),
-  //         },
-  //       }
-  //     );
-
-  //     if (response.ok) {
-  //       const jsonData = await response.json();
-  //       console.log(jsonData);
-  //       setBooks(jsonData.books);
-  //     } else {
-  //       throw new Error("Failed to fetch books");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching books:", error);
-  //   }
-  // };
-
+  
   const insertBook = async () => {
-    // if (!validateForm()) return;
-
     try {
       const formData = new FormData();
       formData.append("book_title", bookDetails.book_title);
@@ -117,7 +95,7 @@ function Tables() {
       formData.append("category_name", "finance");
       formData.append("name", localStorage.getItem("name"));
       formData.append("file", bookDetails.book_cover_photo);
-
+  
       const response = await fetch(
         `https://bookingreadingapp.onrender.com/api/book/addBook`,
         {
@@ -128,7 +106,7 @@ function Tables() {
           body: formData,
         }
       );
-
+  
       if (response.ok) {
         const jsonData = await response.json();
         console.log(jsonData);
@@ -141,6 +119,7 @@ function Tables() {
         });
         setOpenInsertForm(false);
         getBooks();
+        handleSnackbarOpen("Book inserted successfully");
       } else {
         throw new Error("Failed to add book");
       }
@@ -149,8 +128,9 @@ function Tables() {
     }
   };
   
+
+
   const updateBook = async () => {
-    // if (!validateForm()) return;
     try {
       const formData = new FormData();
       formData.append("book_title", bookDetails.book_title || "");
@@ -193,111 +173,6 @@ function Tables() {
       console.error("Error updating book:", error);
     }
   };
-
-  // const updateBook = async () => {
-  //   try {
-  //     console.log("Updating book with ID:", bookId);
-  //     console.log("Updated book details:", bookDetails);
-  
-  //     const formData = new FormData();
-  //     formData.append("book_title", bookDetails.book_title || "");
-  //     formData.append("book_description", bookDetails.book_description || "");
-  //     formData.append("book_page[0][page_no]", bookDetails.book_page);
-  //     formData.append("book_page[0][content]", "Updated content");
-  //     formData.append("category_name", "YourCategoryNameHere");
-  //     formData.append("name", localStorage.getItem("name"));
-  //     if (bookDetails.book_cover_photo) {
-  //       formData.append("file", bookDetails.book_cover_photo);
-  //     }
-  
-  //     const response = await fetch(
-  //       `https://bookingreadingapp.onrender.com/api/book/editBook/${bookId}`,
-  //       {
-  //         method: "PATCH",
-  //         headers: {
-  //           'Content-Type': "application/json",
-  //           Authorization: localStorage.getItem("token"),
-  //         },
-  //         body: JSON.stringify(formData),
-  //       }
-  //     );
-  
-  //     if (response.ok) {
-  //       const jsonData = await response.json();
-  //       console.log("Successfully updated book:", jsonData);
-  
-  //       setOpenEditForm(false);
-  //       setBookDetails({
-  //         book_title: "",
-  //         book_description: "",
-  //         book_cover_photo: null,
-  //         book_page: "",
-  //         status: "",
-  //       });
-  //       getBooks();
-  //     } else {
-  //       throw new Error("Failed to update book");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error updating book:", error);
-  //   }
-  // };
-  
-
-  // const updateBook = async () => {
-  //   try {
-  //     console.log("Updating book with ID:", bookId);
-  //     console.log("Updated book details:", bookDetails);
-  
-  //     const formData = new FormData();
-  //     formData.append("book_title", bookDetails.book_title || "");
-  //     formData.append("book_description", bookDetails.book_description || "");
-  //     formData.append("book_page[0][page_no]", bookDetails.book_page);
-  //     formData.append("book_page[0][content]", "Updated content");
-  //     formData.append("category_name", "YourCategoryNameHere");
-  //     formData.append("name", localStorage.getItem("name"));
-  //     if (bookDetails.book_cover_photo) {
-  //       formData.append("file", bookDetails.book_cover_photo);
-  //     }
-  
-  //     const response = await fetch(
-  //       `https://bookingreadingapp.onrender.com/api/book/editBook/${bookId}`,
-  //       {
-  //         method: "PATCH",
-  //         headers: {
-  //           Authorization: localStorage.getItem("token"),
-  //         },
-  //         body: formData,
-  //       }
-  //     );
-  
-  //     if (response.ok) {
-  //       const jsonData = await response.json();
-  //       console.log("Successfully updated book:", jsonData);
-  
-  //       // Update local state with the updated book data
-  //       const updatedBooks = books.map((book) =>
-  //         book._id === bookId ? jsonData.updatedBook : book
-  //       );
-  //       setBooks(updatedBooks);
-  
-  //       setOpenEditForm(false);
-  //       setBookDetails({
-  //         book_title: "",
-  //         book_description: "",
-  //         book_cover_photo: null,
-  //         book_page: "",
-  //         status: "",
-  //       });
-  //     } else {
-  //       throw new Error("Failed to update book");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error updating book:", error);
-  //   }
-  // };
-  
-
 
   const getBooks = async () => {
     try {
@@ -366,23 +241,6 @@ function Tables() {
     setOpenEditForm(true);
   };
 
-  // const handleEditForm = (bookId) => {
-  //   const bookToEdit = books.find((book) => book._id === bookId);
-  //   console.log("Editing book with ID:", bookId);
-  //   console.log("Book details to edit:", bookToEdit);
-  
-  //   setBookId(bookId);
-  //   setBookDetails({
-  //     book_title: bookToEdit.book_title,
-  //     book_description: bookToEdit.book_description,
-  //     book_cover_photo: null,
-  //     book_page: bookToEdit.book_page,
-  //     status: bookToEdit.status,
-  //   });
-  //   setOpenEditForm(true);
-  // };
-
-
   const handleAddPageForm = (bookId) => {
     console.log("Add Book Page for book with ID:", bookId);
   };
@@ -402,6 +260,11 @@ function Tables() {
     status: book.status,
     _id: book._id,
   }));
+  
+  const handleSnackbarOpen = (message) => {
+    setSnackbarMessage(message);
+    setSnackbarOpen(true);
+  };
   
 
   return (
@@ -450,7 +313,7 @@ function Tables() {
         </Grid>
       </MDBox>
       <Footer />
-
+  
       {/* Insert Form Dialog */}
       <Dialog open={openInsertForm} onClose={() => setOpenInsertForm(false)}>
         <DialogTitle>Insert Book</DialogTitle>
@@ -525,7 +388,7 @@ function Tables() {
           </Button>
         </DialogActions>
       </Dialog>
-
+  
       {/* Edit Form Dialog */}
       <Dialog open={openEditForm} onClose={() => setOpenEditForm(false)}>
         <DialogTitle>Edit Book</DialogTitle>
@@ -600,11 +463,29 @@ function Tables() {
           </Button>
         </DialogActions>
       </Dialog>
+  
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={() => setSnackbarOpen(false)}
+      >
+        <MuiAlert
+          elevation={6}
+          variant="filled"
+          onClose={() => setSnackbarOpen(false)}
+          severity="success"
+        >
+          {snackbarMessage}
+        </MuiAlert>
+      </Snackbar>
     </DashboardLayout>
   );
+  
 }
 
 export default Tables;
+
 
 
 
