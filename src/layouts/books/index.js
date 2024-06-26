@@ -6,19 +6,27 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,
+  DialogActions,  
   TextField,
   ButtonGroup,
   IconButton,
+  Snackbar,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Typography,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
 } from "@mui/material";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import EditIcon from "@mui/icons-material/Edit";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import MuiAlert from "@mui/material/Alert";
 
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
-import Snackbar from "@mui/material/Snackbar";
-import MuiAlert from "@mui/material/Alert";
-
 
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
@@ -36,13 +44,10 @@ const Author = ({ name }) => (
 function Tables() {
   const columns = [
     { Header: "Book ID", accessor: "book_id", width: "10%" },
-    // { Header: "Category ID", accessor: "category_id", width: "10%" },
-    // { Header: "Author ID", accessor: "author_id", width: "10%" },
     { Header: "Title", accessor: "book_title", width: "15%" },
     { Header: "Description", accessor: "book_description", width: "25%" },
     { Header: "Cover Photo", accessor: "book_cover_photo", width: "10%" },
     { Header: "Page Count", accessor: "book_page", width: "10%" },
-    // { Header: "Status", accessor: "status", width: "10%" },
     {
       Header: "Actions",
       accessor: "_id",
@@ -69,33 +74,42 @@ function Tables() {
     },
   ];
   const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState("");  
+  const [snackbarMessage, setSnackbarMessage] = useState("");
   const [openInsertForm, setOpenInsertForm] = useState(false);
   const [openEditForm, setOpenEditForm] = useState(false);
+  const [categories, setCategories] = useState([]);
   const [bookDetails, setBookDetails] = useState({
     book_title: "",
     book_description: "",
     book_cover_photo: null,
-    book_page: "",
-    status: "",
+    book_page: [{ page_no: "", content: "" }],
+    category_name: "",
+    name: "",
   });
   const [bookDetailsError, setBookDetailsError] = useState({});
   const [books, setBooks] = useState([]);
   const [bookId, setBookId] = useState("");
 
   const id = localStorage.getItem("id");
-  
+
   const insertBook = async () => {
     try {
       const formData = new FormData();
       formData.append("book_title", bookDetails.book_title);
       formData.append("book_description", bookDetails.book_description);
-      formData.append("book_page[0][page_no]", "1");
-      formData.append("book_page[0][content]", "Initial content");
-      formData.append("category_name", "finance");
+      bookDetails.book_page.forEach((page, index) => {
+        formData.append(`book_page[${index}][page_no]`, page.page_no);
+        formData.append(`book_page[${index}][content]`, page.content);
+      });
+      formData.append("category_name", bookDetails.category_name);
       formData.append("name", localStorage.getItem("name"));
       formData.append("file", bookDetails.book_cover_photo);
-  
+
+      // Log the FormData content for debugging
+      for (let pair of formData.entries()) {
+        console.log(`${pair[0]}: ${pair[1]}`);
+      }
+
       const response = await fetch(
         `https://bookingreadingapp.onrender.com/api/book/addBook`,
         {
@@ -106,7 +120,7 @@ function Tables() {
           body: formData,
         }
       );
-  
+
       if (response.ok) {
         const jsonData = await response.json();
         console.log(jsonData);
@@ -114,46 +128,50 @@ function Tables() {
           book_title: "",
           book_description: "",
           book_cover_photo: null,
-          book_page: "",
-          status: "",
+          book_page: [{ page_no: "", content: "" }],
+          category_name: "",
+          name: "",
         });
         setOpenInsertForm(false);
         getBooks();
         handleSnackbarOpen("Book inserted successfully");
       } else {
-        throw new Error("Failed to add book");
+        const errorData = await response.json();
+        console.error("Failed to add book:", errorData);
+        handleSnackbarOpen(`Failed to add book: ${errorData.message}`);
       }
     } catch (error) {
       console.error("Error adding book:", error);
+      handleSnackbarOpen(`Error adding book: ${error.message}`);
     }
   };
-  
-
 
   const updateBook = async () => {
     try {
       const formData = new FormData();
       formData.append("book_title", bookDetails.book_title || "");
       formData.append("book_description", bookDetails.book_description || "");
-      formData.append("book_page[0][page_no]", bookDetails.book_page);
-      formData.append("book_page[0][content]", "Updated content");
-      formData.append("category_name", "YourCategoryNameHere");
+      bookDetails.book_page.forEach((page, index) => {
+        formData.append(`book_page[${index}][page_no]`, page.page_no);
+        formData.append(`book_page[${index}][content]`, page.content);
+      });
+      formData.append("category_name", bookDetails.category_name);
       formData.append("name", localStorage.getItem("name"));
       if (bookDetails.book_cover_photo) {
         formData.append("file", bookDetails.book_cover_photo);
       }
-  
+
       const response = await fetch(
-        `https://bookingreadingapp.onrender.com/api/book/editBook/${bookId}`, // Use bookId here instead of id
+        `https://bookingreadingapp.onrender.com/api/book/editBook/${bookId}`,
         {
-          method: "PATCH",
+          method: "PUT",
           headers: {
             Authorization: localStorage.getItem("token"),
           },
           body: formData,
         }
       );
-  
+
       if (response.ok) {
         const jsonData = await response.json();
         console.log(jsonData);
@@ -162,8 +180,9 @@ function Tables() {
           book_title: "",
           book_description: "",
           book_cover_photo: null,
-          book_page: "",
-          status: "",
+          book_page: [{ page_no: "", content: "" }],
+          category_name: "",
+          name: "",
         });
         getBooks();
       } else {
@@ -173,7 +192,7 @@ function Tables() {
       console.error("Error updating book:", error);
     }
   };
-
+  
   const getBooks = async () => {
     try {
       const response = await fetch(
@@ -198,11 +217,34 @@ function Tables() {
     }
   };
 
-  
+  const getCategories = async () => {
+    try {
+      const response = await fetch(
+        `https://bookingreadingapp.onrender.com/api/category/getAllCategory`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: localStorage.getItem("token"),
+          },
+        }
+      );
+
+      if (response.ok) {
+        const jsonData = await response.json();
+        console.log(jsonData);
+        setCategories(jsonData);
+      } else {
+        throw new Error("Failed to fetch categories");
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
+
   const validateForm = () => {
     let valid = true;
     let errors = {};
-  
+
     if (!bookDetails.book_title || !bookDetails.book_title.trim()) {
       errors.book_title = "Book title is required";
       valid = false;
@@ -215,19 +257,19 @@ function Tables() {
       errors.book_cover_photo = "Book cover photo is required";
       valid = false;
     }
-    if (!bookDetails.book_page) {
-      errors.book_page = "Book page count is required";
+    if (!bookDetails.book_page[0].page_no) {
+      errors.book_page_no = "Book page number is required";
       valid = false;
     }
-    if (!bookDetails.status || !bookDetails.status.trim()) {
-      errors.status = "Status is required";
+    if (!bookDetails.book_page[0].content) {
+      errors.book_page_content = "Book page content is required";
       valid = false;
     }
-  
+
     setBookDetailsError(errors);
     return valid;
   };
-  
+
   const handleEditForm = (bookId) => {
     const bookToEdit = books.find((book) => book._id === bookId);
     setBookId(bookId);
@@ -236,7 +278,8 @@ function Tables() {
       book_description: bookToEdit.book_description,
       book_cover_photo: null,
       book_page: bookToEdit.book_page,
-      status: bookToEdit.status,
+      category_name: bookToEdit.category_name,
+      name: bookToEdit.name,
     });
     setOpenEditForm(true);
   };
@@ -247,6 +290,7 @@ function Tables() {
 
   useEffect(() => {
     getBooks();
+    getCategories();
   }, []);
 
   const rows = books.map((book) => ({
@@ -260,68 +304,71 @@ function Tables() {
     status: book.status,
     _id: book._id,
   }));
-  
+
   const handleSnackbarOpen = (message) => {
     setSnackbarMessage(message);
     setSnackbarOpen(true);
   };
-  
 
   return (
     <DashboardLayout>
-      <DashboardNavbar />
-      <MDBox pt={6} pb={3}>
-        <Grid container spacing={6}>
-          <Grid item xs={12}>
-            <Card>
-              <MDBox
-                mx={2}
-                mt={-3}
-                py={3}
-                px={2}
-                variant="gradient"
-                bgColor="info"
-                borderRadius="lg"
-                coloredShadow="info"
-                display="flex"
-                justifyContent="space-between"
-                alignItems="center"
-              >
-                <MDTypography variant="h6" color="white">
-                  Books Table
-                </MDTypography>
-                <Button
-                  variant="contained"
-                  color="info"
-                  startIcon={<AddCircleOutlineIcon />}
-                  onClick={() => setOpenInsertForm(true)}
-                >
-                  Insert Book
-                </Button>
-              </MDBox>
-              <MDBox pt={3}>
-                <DataTable
-                  table={{ columns, rows }}
-                  isSorted={false}
-                  entriesPerPage={false}
-                  showTotalEntries={false}
-                  noEndBorder
-                />
-              </MDBox>
-            </Card>
-          </Grid>
-        </Grid>
-      </MDBox>
-      <Footer />
-  
-      {/* Insert Form Dialog */}
-      <Dialog open={openInsertForm} onClose={() => setOpenInsertForm(false)}>
-        <DialogTitle>Insert Book</DialogTitle>
+  <DashboardNavbar />
+  <MDBox pt={6} pb={3}>
+    <Grid container spacing={6}>
+      <Grid item xs={12}>
+        <Card>
+          <MDBox
+            mx={2}
+            mt={-3}
+            py={3}
+            px={2}
+            variant="gradient"
+            bgColor="info"
+            borderRadius="lg"
+            coloredShadow="info"
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <MDTypography variant="h6" color="white">
+              Books Table
+            </MDTypography>
+                 <Button
+                   variant="contained"
+                   color="info"
+                   startIcon={<AddCircleOutlineIcon />}
+                   onClick={() => setOpenInsertForm(true)}
+                 >
+                   Insert Book
+                 </Button>
+            </MDBox>
+          <MDBox pt={3}>
+                 <DataTable
+                   table={{ columns, rows }}
+                   isSorted={false}
+                   entriesPerPage={false}
+                   showTotalEntries={false}
+                   noEndBorder
+                 />
+               </MDBox>
+        </Card>
+      </Grid>
+    </Grid>
+  </MDBox>
+  <Footer />
+
+
+      <Dialog
+        open={openInsertForm}
+        onClose={() => setOpenInsertForm(false)}
+        aria-labelledby="form-dialog-title"
+      >
+        <DialogTitle id="form-dialog-title">Add New Book</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             margin="dense"
-            id="bookTitle"
+            id="book_title"
             label="Book Title"
             type="text"
             fullWidth
@@ -334,12 +381,10 @@ function Tables() {
           />
           <TextField
             margin="dense"
-            id="bookDescription"
+            id="book_description"
             label="Book Description"
             type="text"
             fullWidth
-            multiline
-            rows={4}
             value={bookDetails.book_description}
             onChange={(e) =>
               setBookDetails({
@@ -350,22 +395,26 @@ function Tables() {
             error={!!bookDetailsError.book_description}
             helperText={bookDetailsError.book_description}
           />
+          <FormControl fullWidth margin="dense">
+            <InputLabel id="category-label">Category</InputLabel>
+            <Select
+              labelId="category-label"
+              id="category_name"
+              value={bookDetails.category_name}
+              onChange={(e) =>
+                setBookDetails({ ...bookDetails, category_name: e.target.value })
+              }
+            >
+              {categories && categories.map((category) => (
+                <MenuItem key={category._id} value={category.category_name}>
+                  {category.category_name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
           <TextField
             margin="dense"
-            id="bookPage"
-            label="Book Page Count"
-            type="number"
-            fullWidth
-            value={bookDetails.book_page}
-            onChange={(e) =>
-              setBookDetails({ ...bookDetails, book_page: e.target.value })
-            }
-            error={!!bookDetailsError.book_page}
-            helperText={bookDetailsError.book_page}
-          />
-          <TextField
-            margin="dense"
-            id="bookCoverPhoto"
+            id="book_cover_photo"
             label="Book Cover Photo"
             type="file"
             fullWidth
@@ -378,25 +427,82 @@ function Tables() {
             error={!!bookDetailsError.book_cover_photo}
             helperText={bookDetailsError.book_cover_photo}
           />
+          <Accordion>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography>Book Pages</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Grid container spacing={2}>
+                {bookDetails.book_page.map((page, index) => (
+                  <React.Fragment key={index}>
+                    <Grid item xs={6}>
+                      <TextField
+                        margin="dense"
+                        id={`book_page_${index}_page_no`}
+                        label="Page Number"
+                        type="text"
+                        fullWidth
+                        value={page.page_no}
+                        onChange={(e) => {
+                          const updatedPages = [...bookDetails.book_page];
+                          updatedPages[index].page_no = e.target.value;
+                          setBookDetails({
+                            ...bookDetails,
+                            book_page: updatedPages,
+                          });
+                        }}
+                        error={!!bookDetailsError.book_page_no}
+                        helperText={bookDetailsError.book_page_no}
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <TextField
+                        margin="dense"
+                        id={`book_page_${index}_content`}
+                        label="Content"
+                        type="text"
+                        fullWidth
+                        value={page.content}
+                        onChange={(e) => {
+                          const updatedPages = [...bookDetails.book_page];
+                          updatedPages[index].content = e.target.value;
+                          setBookDetails({
+                            ...bookDetails,
+                            book_page: updatedPages,
+                          });
+                        }}
+                        error={!!bookDetailsError.book_page_content}
+                        helperText={bookDetailsError.book_page_content}
+                      />
+                    </Grid>
+                  </React.Fragment>
+                ))}
+              </Grid>
+            </AccordionDetails>
+          </Accordion>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenInsertForm(false)} color="primary">
             Cancel
           </Button>
           <Button onClick={insertBook} color="primary">
-            Insert
+            Save
           </Button>
         </DialogActions>
       </Dialog>
-  
-      {/* Edit Form Dialog */}
-      <Dialog open={openEditForm} onClose={() => setOpenEditForm(false)}>
-        <DialogTitle>Edit Book</DialogTitle>
+
+      {/* Edit Book Dialog */}
+      <Dialog
+        open={openEditForm}
+        onClose={() => setOpenEditForm(false)}
+        aria-labelledby="form-dialog-title"
+      >
+        <DialogTitle id="form-dialog-title">Edit Book</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             margin="dense"
-            id="editBookTitle"
+            id="book_title"
             label="Book Title"
             type="text"
             fullWidth
@@ -409,12 +515,10 @@ function Tables() {
           />
           <TextField
             margin="dense"
-            id="editBookDescription"
+            id="book_description"
             label="Book Description"
             type="text"
             fullWidth
-            multiline
-            rows={4}
             value={bookDetails.book_description}
             onChange={(e) =>
               setBookDetails({
@@ -425,22 +529,26 @@ function Tables() {
             error={!!bookDetailsError.book_description}
             helperText={bookDetailsError.book_description}
           />
+          <FormControl fullWidth margin="dense">
+            <InputLabel id="category-label">Category</InputLabel>
+            <Select
+              labelId="category-label"
+              id="category_name"
+              value={bookDetails.category_name}
+              onChange={(e) =>
+                setBookDetails({ ...bookDetails, category_name: e.target.value })
+              }
+            >
+              {categories.map((category) => (
+                <MenuItem key={category._id} value={category.category_name}>
+                  {category.category_name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
           <TextField
             margin="dense"
-            id="editBookPage"
-            label="Book Page Count"
-            type="number"
-            fullWidth
-            value={bookDetails.book_page}
-            onChange={(e) =>
-              setBookDetails({ ...bookDetails, book_page: e.target.value })
-            }
-            error={!!bookDetailsError.book_page}
-            helperText={bookDetailsError.book_page}
-          />
-          <TextField
-            margin="dense"
-            id="editBookCoverPhoto"
+            id="book_cover_photo"
             label="Book Cover Photo"
             type="file"
             fullWidth
@@ -453,41 +561,88 @@ function Tables() {
             error={!!bookDetailsError.book_cover_photo}
             helperText={bookDetailsError.book_cover_photo}
           />
+          <Accordion>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography>Book Pages</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Grid container spacing={2}>
+                {bookDetails.book_page.map((page, index) => (
+                  <React.Fragment key={index}>
+                    <Grid item xs={6}>
+                      <TextField
+                        margin="dense"
+                        id={`book_page_${index}_page_no`}
+                        label="Page Number"
+                        type="text"
+                        fullWidth
+                        value={page.page_no}
+                        onChange={(e) => {
+                          const updatedPages = [...bookDetails.book_page];
+                          updatedPages[index].page_no = e.target.value;
+                          setBookDetails({
+                            ...bookDetails,
+                            book_page: updatedPages,
+                          });
+                        }}
+                        error={!!bookDetailsError.book_page_no}
+                        helperText={bookDetailsError.book_page_no}
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <TextField
+                        margin="dense"
+                        id={`book_page_${index}_content`}
+                        label="Content"
+                        type="text"
+                        fullWidth
+                        value={page.content}
+                        onChange={(e) => {
+                          const updatedPages = [...bookDetails.book_page];
+                          updatedPages[index].content = e.target.value;
+                          setBookDetails({
+                            ...bookDetails,
+                            book_page: updatedPages,
+                          });
+                        }}
+                        error={!!bookDetailsError.book_page_content}
+                        helperText={bookDetailsError.book_page_content}
+                      />
+                    </Grid>
+                  </React.Fragment>
+                ))}
+              </Grid>
+            </AccordionDetails>
+          </Accordion>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenEditForm(false)} color="primary">
             Cancel
           </Button>
           <Button onClick={updateBook} color="primary">
-            Update
+            Save
           </Button>
         </DialogActions>
       </Dialog>
-  
-      {/* Snackbar */}
+
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}
         onClose={() => setSnackbarOpen(false)}
       >
         <MuiAlert
-          elevation={6}
-          variant="filled"
           onClose={() => setSnackbarOpen(false)}
           severity="success"
+          sx={{ width: "100%" }}
         >
           {snackbarMessage}
         </MuiAlert>
       </Snackbar>
     </DashboardLayout>
   );
-  
 }
 
 export default Tables;
-
-
-
 
 
 
