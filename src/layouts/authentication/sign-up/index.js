@@ -1,13 +1,3 @@
-
-
-
-
-
-
-
-
-
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -25,6 +15,7 @@ import BasicLayout from "layouts/authentication/components/BasicLayout";
 import bgImage from "assets/images/bg-sign-in-basic.jpeg";
 import MDSnackbar from "components/MDSnackbar";
 import CountryStateCity from "./CountryStateCity.json";
+import { Height } from "@mui/icons-material";
 
 const AddWriter = () => {
   const navigate = useNavigate();
@@ -69,15 +60,39 @@ const AddWriter = () => {
         handleSnackbarOpen("Please enter a valid email.", "error");
         return;
       }
+   
+      if (!formData.dob) {
+        handleSnackbarOpen("DOB cannot be empty.", "error");
+        return;
+      }
+      if (!formData.country) {
+        handleSnackbarOpen("Please select a Country.", "error");
+        return;
+      }
+      if (!formData.state) {
+        handleSnackbarOpen("Please select a State.", "error");
+        return;
+      }
+      if (!formData.city) {
+        handleSnackbarOpen("Please select a City.", "error");
+        return;
+      }
+      if (!formData.gender) {
+        handleSnackbarOpen("Please select Gender.", "error");
+        return;
+      }
       if (!formData.mobile.trim()) {
         handleSnackbarOpen("Mobile cannot be empty.", "error");
         return;
       }
       if (!isValidMobile(formData.mobile)) {
-        handleSnackbarOpen("Mobile number must be 10 digits long without spaces.", "error");
+        handleSnackbarOpen(
+          "Mobile number must be 10 digits long without spaces.",
+          "error"
+        );
         return;
       }
-
+      
       const formDataToSend = new FormData();
       formDataToSend.append("name", formData.name);
       formDataToSend.append("dob", formData.dob);
@@ -118,16 +133,21 @@ const AddWriter = () => {
         email: "",
       });
 
-      handleSnackbarOpen("Successfully signed up!", "success");
-      navigate("/authentication/sign-in");
+      handleSnackbarOpen("Successfully signed up!", "success", true);
     } catch (error) {
       console.error("Error:", error);
       handleSnackbarOpen("An error occurred. Please try again.", "error");
     }
   };
 
-  const handleSnackbarOpen = (message, color) => {
+  const handleSnackbarOpen = (message, color, navigateToSignIn = false) => {
     setSnackbar({ open: true, message, color });
+    if (navigateToSignIn) {
+      setTimeout(() => {
+        setSnackbar({ open: false, message: "", color: "success" });
+        navigate("/authentication/sign-in");
+      }, 1500);
+    }
   };
 
   const handleSnackbarClose = () => {
@@ -164,8 +184,25 @@ const AddWriter = () => {
   };
 
   return (
-    <BasicLayout image={bgImage}>
-      <Card maxWidth="md">
+    <BasicLayout
+    image={bgImage}
+    style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      height: '100vh',
+      paddingTop: '100px', 
+      paddingBottom: '-100px', 
+    }}
+  >
+      <Card
+      style={{
+        width: '500px',
+        marginTop: '30px', 
+        marginBottom: '30px', 
+        transform: 'translateX(-70px)', 
+      }}
+    >
         <MDBox
           variant="gradient"
           bgColor="info"
@@ -226,7 +263,7 @@ const AddWriter = () => {
                 />
               </Grid>
               <Grid item xs={12} md={6}>
-                <TextField
+                <TextField 
                   margin="dense"
                   id="country"
                   label="Country"
@@ -235,7 +272,11 @@ const AddWriter = () => {
                   value={formData.country}
                   onChange={handleCountryChange}
                   select
-                >
+                  sx={{ height: "40px", 
+                    '.MuiInputBase-root': { height: '100%' }, 
+                    '.MuiSelect-select': { height: '100%', display: 'flex', alignItems: 'center' } 
+                  }}
+            >
                   {countries.map((country) => (
                     <MenuItem key={country.name} value={country.name}>
                       {country.name}
@@ -253,7 +294,11 @@ const AddWriter = () => {
                   value={formData.state}
                   onChange={handleStateChange}
                   select
-                >
+                  sx={{ height: "40px", 
+                    '.MuiInputBase-root': { height: '100%' }, 
+                    '.MuiSelect-select': { height: '100%', display: 'flex', alignItems: 'center' } 
+                  }}
+            >
                   {states.map((state) => (
                     <MenuItem key={state.name} value={state.name}>
                       {state.name}
@@ -273,7 +318,11 @@ const AddWriter = () => {
                     setFormData({ ...formData, city: e.target.value })
                   }
                   select
-                >
+                  sx={{ height: "40px", 
+                    '.MuiInputBase-root': { height: '100%' }, 
+                    '.MuiSelect-select': { height: '100%', display: 'flex', alignItems: 'center' } 
+                  }}
+            >
                   {cities.map((city) => (
                     <MenuItem key={city.name} value={city.name}>
                       {city.name}
@@ -281,7 +330,7 @@ const AddWriter = () => {
                   ))}
                 </TextField>
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} md={100}>
                 <TextField
                   margin="dense"
                   id="gender"
@@ -292,7 +341,11 @@ const AddWriter = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, gender: e.target.value })
                   }
-                >
+                  sx={{ height: "40px", 
+                    '.MuiInputBase-root': { height: '100%' }, 
+                    '.MuiSelect-select': { height: '100%', display: 'flex', alignItems: 'center' } 
+                  }}
+            >
                   <MenuItem value="Male">Male</MenuItem>
                   <MenuItem value="Female">Female</MenuItem>
                   <MenuItem value="Other">Other</MenuItem>
@@ -300,68 +353,75 @@ const AddWriter = () => {
               </Grid>
               <Grid item xs={12}>
                 <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.status}
-                      onChange={(e) =>
-                        setFormData({ ...formData, status: e.target.checked })
-                      }
-                      color="primary"
-                    />
-                  }
-                  label="Status"
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  margin="dense"
-                  id="photo"
-                  label="Photo"
-                  type="file"
-                  fullWidth
-                  InputLabelProps={{ shrink: true }}
-                  onChange={(e) =>
-                    setFormData({ ...formData, photo: e.target.files[0] })
-                  }
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  margin="dense"
-                  id="mobile"
-                  label="Mobile"
-                  type="text"
-                  fullWidth
-                  value={formData.mobile}
-                  onChange={(e) =>
-                    setFormData({ ...formData, mobile: e.target.value.replace(/\s/g, "") })
-                  }
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <MDBox mt={3} display="flex" justifyContent="space-between">
-                  <Button onClick={() => navigate("/writer")}>Cancel</Button>
-                  <Button onClick={handleInsert} color="primary" variant="contained">
-                    Sign Up
-                  </Button>
-                </MDBox>
-              </Grid>
+                  control={ <Checkbox
+                    checked={formData.status}
+                    onChange={(e) =>
+                      setFormData({ ...formData, status: e.target.checked })
+                    }
+                    color="primary"
+                  />
+                }
+                label="Status"
+              />
             </Grid>
-          </MDBox>
+            <Grid item xs={12}>
+              <TextField
+                margin="dense"
+                id="photo"
+                label="Photo"
+                type="file"
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+                onChange={(e) =>
+                  setFormData({ ...formData, photo: e.target.files[0] })
+                }
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                margin="dense"
+                id="mobile"
+                label="Mobile"
+                type="text"
+                fullWidth
+                value={formData.mobile}
+                inputProps={{ maxLength: 10 }}
+                onChange={(e) =>
+                  setFormData({ ...formData, mobile: e.target.value.replace(/\D/g, "") })
+                }
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <MDBox mt={3} display="flex" justifyContent="space-between">
+                <Button onClick={() => navigate("/writer")}>Cancel</Button>
+                <Button
+                  onClick={handleInsert}
+                  color="primary"
+                  variant="contained"
+                  style={{ color: "white" }}
+                >
+                  Sign Up
+                </Button>
+              </MDBox>
+            </Grid>
+          </Grid>
         </MDBox>
-      </Card>
-      <MDSnackbar
-        color={snackbar.color}
-        icon="notifications"
-        title="Sign Up"
-        content={snackbar.message}
-        open={snackbar.open}
-        onClose={handleSnackbarClose}
-        close={handleSnackbarClose}
-        bgWhite
-      />
-    </BasicLayout>
-  );
+      </MDBox>
+    </Card>
+    <MDSnackbar
+      color={snackbar.color}
+      icon="notifications"
+      title="Sign Up"
+      content={snackbar.message}
+      open={snackbar.open}
+      onClose={handleSnackbarClose}
+      close={handleSnackbarClose}
+      bgWhite
+    />
+  </BasicLayout>
+);
 };
 
 export default AddWriter;
+
+
